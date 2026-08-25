@@ -1,5 +1,6 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Logo from "./Logo";
+import { useAuth } from "../../context/AuthContext";
 
 const navLinks = [
   { label: "How it works", href: "#how-it-works" },
@@ -8,6 +9,17 @@ const navLinks = [
 ];
 
 const Navbar = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
+
+  // Candidates have `name`, employers have `companyName` — use whichever exists
+  const displayName = user?.name || user?.companyName;
+
   return (
     <nav className="sticky top-0 z-50 bg-bg/85 backdrop-blur-sm border-b border-border">
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -31,20 +43,36 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <Link
-            to="/login"
-            className="text-sm text-ink px-3 py-2 rounded-md hover:bg-ink/5 transition-colors"
-          >
-            Log in
-          </Link>
-          <Link
-            to="/signup"
-            className="text-sm bg-accent text-white px-4 py-2 rounded-md font-medium
-                       shadow-soft hover:shadow-hover hover:-translate-y-0.5
-                       transition-all duration-200"
-          >
-            Get started
-          </Link>
+          {user ? (
+            <>
+              <span className="text-sm text-inkSoft hidden sm:inline">
+                {displayName}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="text-sm text-ink px-3 py-2 rounded-md hover:bg-ink/5 transition-colors"
+              >
+                Log out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="text-sm text-ink px-3 py-2 rounded-md hover:bg-ink/5 transition-colors"
+              >
+                Log in
+              </Link>
+              <Link
+                to="/signup"
+                className="text-sm bg-accent text-white px-4 py-2 rounded-md font-medium
+                           shadow-soft hover:shadow-hover hover:-translate-y-0.5
+                           transition-all duration-200"
+              >
+                Get started
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>

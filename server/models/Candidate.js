@@ -25,6 +25,20 @@ const workHistoryItemSchema = new mongoose.Schema(
   { _id: false },
 );
 
+// One detected gap in the candidate's work history. Historical gaps are
+// kept for context but never drive skill extraction or matching — only
+// the current gap (isCurrent: true) does that.
+const careerGapSchema = new mongoose.Schema(
+  {
+    startDate: Date,
+    endDate: Date, // null for the current gap — it's still ongoing
+    durationMonths: Number,
+    isCurrent: { type: Boolean, default: false },
+    reason: { type: String, default: "" }, // optional context the candidate can add later
+  },
+  { _id: false },
+);
+
 // One question+answer pair from the AI's conversational skill interview
 const interviewAnswerSchema = new mongoose.Schema(
   {
@@ -42,7 +56,11 @@ const candidateSchema = new mongoose.Schema(
 
     workHistory: [workHistoryItemSchema],
 
-    // These two get calculated automatically from workHistory gaps (we'll write that logic in Step 6)
+    // Full history of every detected gap, current and historical
+    careerGaps: [careerGapSchema],
+
+    // Convenience summary of the CURRENT gap only (mirrors careerGaps.find(g => g.isCurrent))
+    // — kept so existing dashboard code that reads these two fields still works unchanged
     hasCareerGap: { type: Boolean, default: false },
     gapDurationMonths: { type: Number, default: 0 },
 

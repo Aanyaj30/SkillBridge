@@ -5,6 +5,8 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import CandidateDashboard from "./pages/CandidateDashboard";
 import EmployerDashboard from "./pages/EmployerDashboard";
+import Jobs from "./pages/Jobs";
+import PostJob from "./pages/PostJob";
 
 function App() {
   return (
@@ -16,6 +18,8 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
           <Route path="/employer/dashboard" element={<EmployerDashboard />} />
+          <Route path="/jobs" element={<Jobs />} />
+          <Route path="/post-job" element={<PostJob />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
