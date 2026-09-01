@@ -7,8 +7,17 @@ import {
   extractSkillsFromCompleteInterview,
   extractSkillsFromInterview,
 } from "../services/aiService.js";
-import { parseResumeWithEdenAI, parseResumeLocally } from "../services/resume/edenParser.js";
-import { normalizeSkill, normalizeSkillList } from "../services/matching/skillNormalizer.js";
+import {
+  parseResumeWithEdenAI,
+  parseResumeLocally,
+} from "../services/resume/edenParser.js";
+import {
+  normalizeSkill,
+  normalizeSkillList,
+  extractExplicitSkillsFromResume,
+  isSkillExplicitlyPresent,
+  findSkillEvidence,
+} from "../services/matching/skillNormalizer.js";
 import { PDFParse } from "pdf-parse";
 
 // Month-difference helper
@@ -107,13 +116,20 @@ const extractTextFromBuffer = async (buffer, mimetype = "") => {
     try {
       const parser = new PDFParse({ data: buffer });
       await parser.load();
-      const text = await parser.getText();
-      if (text && text.trim().length > 10) return text;
+      const parsedResult = await parser.getText();
+      const text = typeof parsedResult === "string" ? parsedResult : parsedResult?.text || "";
+      if (text && text.trim().length > 10) return text.trim();
     } catch (pdfErr) {
-      console.warn("PDF parser string fallback used:", pdfErr.message);
+      console.warn("PDF parser error:", pdfErr.message);
     }
   }
-  return buffer.toString("utf8");
+
+  const raw = buffer.toString("utf8");
+  // If the raw text is actually a binary PDF that couldn't be parsed, don't return garbage binary data
+  if (raw.startsWith("%PDF") || /[\x00-\x08\x0E-\x1F]/.test(raw.slice(0, 100))) {
+    return "";
+  }
+  return raw;
 };
 
 // GET /api/candidate/profile
@@ -282,11 +298,12 @@ export const uploadResumeFile = async (req, res) => {
 
     candidate.resumeText = extractedRawText;
 
-    // Use Eden AI Parser
+    // Use Eden AI Parser (structured sections) with raw text validation
     const parsed = await parseResumeWithEdenAI(
       req.file.buffer,
       req.file.mimetype,
-      req.file.originalname || "resume.pdf"
+      req.file.originalname || "resume.pdf",
+      extractedRawText
     );
 
     if (parsed.bio && !candidate.bio) {
@@ -297,16 +314,35 @@ export const uploadResumeFile = async (req, res) => {
       candidate.education = parsed.education;
     }
 
-    if (parsed.skills && parsed.skills.length > 0) {
-      const resumeSkills = parsed.skills.map((s) => ({
-        skill: normalizeSkill(s.skill),
-        evidence: s.evidence || "Extracted from uploaded resume",
-        source: "resume",
-        strength: s.strength || "Medium",
-        confidence: s.confidence || 0.9,
-      }));
-      candidate.skillEvidence = mergeSkillEvidence(candidate.skillEvidence, resumeSkills);
+    // 1. Extract explicit skills with exact snippet evidence directly from raw resume text
+    const explicitSkills = extractExplicitSkillsFromResume(extractedRawText);
+    const seen = new Set(explicitSkills.map((s) => s.skill.toLowerCase()));
+    const verifiedSkills = [...explicitSkills];
+
+    // 2. Validate any skills returned by Eden AI against actual raw resume text
+    if (parsed.skills && Array.isArray(parsed.skills)) {
+      parsed.skills.forEach((s) => {
+        const rawName = typeof s === "string" ? s : s.skill || s.name || "";
+        if (rawName && isSkillExplicitlyPresent(rawName, extractedRawText)) {
+          const canonical = normalizeSkill(rawName);
+          const key = canonical.toLowerCase();
+          if (!seen.has(key)) {
+            seen.add(key);
+            const ev = findSkillEvidence(rawName, extractedRawText);
+            verifiedSkills.push({
+              skill: canonical,
+              evidence: ev?.evidence || s.evidence || "Extracted from resume text",
+              source: "resume",
+              strength: ev?.strength || s.strength || "Medium",
+              confidence: ev?.confidence || s.confidence || 0.95,
+            });
+          }
+        }
+      });
     }
+
+    const nonResumeEvidence = (candidate.skillEvidence || []).filter((e) => e.source !== "resume");
+    candidate.skillEvidence = mergeSkillEvidence(nonResumeEvidence, verifiedSkills);
 
     // Auto-fill work history if empty
     if ((!candidate.workHistory || candidate.workHistory.length === 0) && parsed.workHistory?.length > 0) {
@@ -338,7 +374,7 @@ export const uploadResumeFile = async (req, res) => {
     const { password, ...safeCandidate } = candidate.toObject();
     res.json({
       candidate: safeCandidate,
-      extractedSkillsCount: (parsed.skills || []).length,
+      extractedSkillsCount: verifiedSkills.length,
       extractedTextLength: extractedRawText.length,
     });
   } catch (err) {
@@ -359,7 +395,7 @@ export const uploadResume = async (req, res) => {
 
     candidate.resumeText = resumeText;
 
-    // Use deterministic Eden / local structured parser
+    // Use deterministic local structured parser
     const parsed = parseResumeLocally(resumeText);
 
     if (parsed.bio && !candidate.bio) {
@@ -370,16 +406,10 @@ export const uploadResume = async (req, res) => {
       candidate.education = parsed.education;
     }
 
-    if (parsed.skills && parsed.skills.length > 0) {
-      const resumeSkills = parsed.skills.map((s) => ({
-        skill: normalizeSkill(s.skill),
-        evidence: s.evidence || "Extracted from resume experience",
-        source: "resume",
-        strength: s.strength || "Medium",
-        confidence: s.confidence || 0.9,
-      }));
-      candidate.skillEvidence = mergeSkillEvidence(candidate.skillEvidence, resumeSkills);
-    }
+    // Extract explicit skills with exact evidence from resume text
+    const explicitSkills = extractExplicitSkillsFromResume(resumeText);
+    const nonResumeEvidence = (candidate.skillEvidence || []).filter((e) => e.source !== "resume");
+    candidate.skillEvidence = mergeSkillEvidence(nonResumeEvidence, explicitSkills);
 
     if ((!candidate.workHistory || candidate.workHistory.length === 0) && parsed.workHistory?.length > 0) {
       candidate.workHistory = parsed.workHistory.map((wh) => ({
@@ -409,7 +439,7 @@ export const uploadResume = async (req, res) => {
     const { password, ...safeCandidate } = candidate.toObject();
     res.json({
       candidate: safeCandidate,
-      extractedSkillsCount: (parsed.skills || []).length,
+      extractedSkillsCount: explicitSkills.length,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });

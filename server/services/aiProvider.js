@@ -48,16 +48,12 @@ export const callLLM = async ({
   }
 
   try {
-    const response = await axios.post(
-      `${GEMINI_URL}?key=${apiKey}`,
-      payload,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        timeout: 35000,
-      }
-    );
+    const response = await axios.post(`${GEMINI_URL}?key=${apiKey}`, payload, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      timeout: 60000,
+    });
 
     const candidates = response.data?.candidates;
     if (!candidates || candidates.length === 0) {

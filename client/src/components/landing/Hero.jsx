@@ -1,8 +1,12 @@
 import { Link } from "react-router-dom";
 import { useInView } from "../../hooks/useInView";
+import { useAuth } from "../../context/AuthContext";
 
 const Hero = () => {
   const [ref, inView] = useInView(0.1);
+  const { user } = useAuth();
+  const isCandidate = Boolean(user?.name);
+  const isEmployer = Boolean(user?.companyName);
 
   return (
     <section
@@ -31,52 +35,113 @@ const Hero = () => {
 
       {/* Core Positioning Statement */}
       <p className="mt-6 text-base sm:text-lg text-inkSoft max-w-2xl mx-auto leading-relaxed font-normal">
-        SkillBridge helps employers discover candidates based on <strong>demonstrated skills and practical potential</strong> — not just traditional resume keyword history.
+        SkillBridge helps employers discover candidates based on <strong>demonstrated skills and potential</strong> — not just traditional resume history.
+      </p>
+
+      {/* Supporting capability copy */}
+      <p className="mt-3 text-xs sm:text-sm text-inkSoft/90 max-w-xl mx-auto leading-relaxed">
+        Candidates demonstrate capability through structured resume evidence, practical projects, experience history, certifications, and job-relevant adaptive interviews.
       </p>
 
       {/* Primary CTA Buttons */}
       <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-        <Link
-          to="/signup?role=candidate"
-          className="group bg-accent text-white px-7 py-3.5 rounded-xl text-xs font-bold
-                     shadow-soft hover:bg-accent/90 hover:-translate-y-0.5 hover:shadow-card
-                     transition-all duration-200 flex items-center gap-2"
-        >
-          I'm a Candidate
-          <span className="transition-transform duration-200 group-hover:translate-x-1">
-            →
-          </span>
-        </Link>
-        <Link
-          to="/signup?role=employer"
-          className="group bg-white text-ink border border-border px-7 py-3.5 rounded-xl text-xs font-bold
-                     hover:border-accent/40 hover:-translate-y-0.5 hover:shadow-soft
-                     transition-all duration-200 flex items-center gap-2"
-        >
-          I'm Hiring
-          <span className="transition-transform duration-200 group-hover:translate-x-1">
-            →
-          </span>
-        </Link>
+        {user ? (
+          isCandidate ? (
+            <>
+              <Link
+                to="/candidate/dashboard"
+                className="group bg-accent text-white px-7 py-3.5 rounded-xl text-xs font-bold
+                           shadow-soft hover:bg-accent/90 hover:-translate-y-0.5 hover:shadow-card
+                           transition-all duration-200 flex items-center gap-2"
+              >
+                Go to My Profile & Evidence
+                <span className="transition-transform duration-200 group-hover:translate-x-1">
+                  →
+                </span>
+              </Link>
+              <Link
+                to="/jobs"
+                className="group bg-white text-ink border border-border px-7 py-3.5 rounded-xl text-xs font-bold
+                           hover:border-accent/40 hover:-translate-y-0.5 hover:shadow-soft
+                           transition-all duration-200 flex items-center gap-2"
+              >
+                Browse Open Jobs
+                <span className="transition-transform duration-200 group-hover:translate-x-1">
+                  →
+                </span>
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/employer/dashboard"
+                className="group bg-accent text-white px-7 py-3.5 rounded-xl text-xs font-bold
+                           shadow-soft hover:bg-accent/90 hover:-translate-y-0.5 hover:shadow-card
+                           transition-all duration-200 flex items-center gap-2"
+              >
+                Go to Employer Pipeline
+                <span className="transition-transform duration-200 group-hover:translate-x-1">
+                  →
+                </span>
+              </Link>
+              <Link
+                to="/post-job"
+                className="group bg-white text-ink border border-border px-7 py-3.5 rounded-xl text-xs font-bold
+                           hover:border-accent/40 hover:-translate-y-0.5 hover:shadow-soft
+                           transition-all duration-200 flex items-center gap-2"
+              >
+                + Post a Job
+                <span className="transition-transform duration-200 group-hover:translate-x-1">
+                  →
+                </span>
+              </Link>
+            </>
+          )
+        ) : (
+          <>
+            <Link
+              to="/signup?role=candidate"
+              className="group bg-accent text-white px-7 py-3.5 rounded-xl text-xs font-bold
+                         shadow-soft hover:bg-accent/90 hover:-translate-y-0.5 hover:shadow-card
+                         transition-all duration-200 flex items-center gap-2"
+            >
+              For Candidates
+              <span className="transition-transform duration-200 group-hover:translate-x-1">
+                →
+              </span>
+            </Link>
+            <Link
+              to="/signup?role=employer"
+              className="group bg-white text-ink border border-border px-7 py-3.5 rounded-xl text-xs font-bold
+                         hover:border-accent/40 hover:-translate-y-0.5 hover:shadow-soft
+                         transition-all duration-200 flex items-center gap-2"
+            >
+              For Employers
+              <span className="transition-transform duration-200 group-hover:translate-x-1">
+                →
+              </span>
+            </Link>
+          </>
+        )}
       </div>
 
-      {/* Micro Metrics Strip */}
+      {/* Conceptual Pillars Strip (Truthful & Defensible) */}
       <div className="mt-14 pt-10 border-t border-border/80 grid grid-cols-2 md:grid-cols-4 gap-6 text-left max-w-4xl mx-auto">
         <div className="space-y-1">
-          <p className="text-2xl font-bold text-ink">100%</p>
-          <p className="text-xs text-inkSoft">Evidence-Grounded (Zero Fabrication)</p>
+          <p className="text-sm font-bold text-ink">Evidence-First</p>
+          <p className="text-xs text-inkSoft">Skills linked to verified candidate submissions</p>
         </div>
         <div className="space-y-1">
-          <p className="text-2xl font-bold text-accent">5 Cohorts</p>
-          <p className="text-xs text-inkSoft">Inclusive Workforce Architecture</p>
+          <p className="text-sm font-bold text-accent">5 Cohorts</p>
+          <p className="text-xs text-inkSoft">Inclusive Workforce architecture</p>
         </div>
         <div className="space-y-1">
-          <p className="text-2xl font-bold text-positive">Dynamic</p>
-          <p className="text-xs text-inkSoft">Adaptive Hinglish & English Q&A</p>
+          <p className="text-sm font-bold text-positive">Adaptive Q&A</p>
+          <p className="text-xs text-inkSoft">Job-relevant English & Hinglish follow-ups</p>
         </div>
         <div className="space-y-1">
-          <p className="text-2xl font-bold text-ink">Explainable</p>
-          <p className="text-xs text-inkSoft">Transparent Before vs After Match</p>
+          <p className="text-sm font-bold text-ink">Explainable</p>
+          <p className="text-xs text-inkSoft">Transparent evidence dossiers for employers</p>
         </div>
       </div>
     </section>

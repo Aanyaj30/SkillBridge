@@ -1,23 +1,27 @@
 import { Link } from "react-router-dom";
 import { useInView } from "../../hooks/useInView";
+import { useAuth } from "../../context/AuthContext";
 
 const ForEmployers = () => {
   const [ref, inView] = useInView(0.2);
+  const { user } = useAuth();
+  const isCandidate = Boolean(user?.name);
+  const isEmployer = Boolean(user?.companyName);
 
   const benefits = [
     {
       title: "Discover Overlooked Talent",
-      desc: "Surface candidates filtered out by keyword ATS screeners who have proven hands-on capability in projects and real-time interviews.",
+      desc: "Identify qualified candidates whose conventional resumes may undersell their capability due to career breaks, non-traditional backgrounds, or lack of recruiter target-list pedigree.",
       icon: "⚡",
     },
     {
-      title: "Evidence Provenance & Audit Trail",
-      desc: "Every score is explainable. See the exact code repositories, project deliverables, and interview answers backing each skill.",
+      title: "Evidence Provenance & Audit Trails",
+      desc: "Understand exactly why a candidate matches. See the verified projects, code deliverables, work experience, and job-specific interview responses backing each skill.",
       icon: "🔍",
     },
     {
-      title: "Job-Specific Adaptive Interviews",
-      desc: "AI dynamically interviews candidates on your exact technical stack and evaluates English, Hindi, and Hinglish responses accurately.",
+      title: "Job-Specific Adaptive Evaluation",
+      desc: "Conducts conversational follow-ups targeted to your exact role requirements, evaluating candidate responses in English, Hindi, and Hinglish with zero bias.",
       icon: "🤖",
     },
   ];
@@ -30,13 +34,13 @@ const ForEmployers = () => {
     >
       <div className="text-center mb-14">
         <span className="text-xs font-bold text-accent uppercase tracking-wider">
-          For Inclusive & Forward-Thinking Employers
+          For Forward-Thinking Employers
         </span>
         <h2 className="text-2xl md:text-3xl font-bold text-ink tracking-tight mt-1 max-w-2xl mx-auto leading-snug">
-          Hire by what candidates can actually demonstrate, not just what's on a paper resume.
+          Hire by demonstrated capability, not just static keyword history.
         </h2>
         <p className="text-sm text-inkSoft mt-3 max-w-xl mx-auto">
-          SkillBridge reduces dependence on conventional resume signals by adding verified, evidence-based skill assessments.
+          Designed to reduce over-reliance on conventional resume signals by evaluating verified, evidence-backed candidate competencies.
         </p>
       </div>
 
@@ -61,12 +65,30 @@ const ForEmployers = () => {
       </div>
 
       <div className="mt-12 text-center">
-        <Link
-          to="/signup?role=employer"
-          className="inline-block bg-ink text-white px-7 py-3 rounded-xl text-xs font-bold shadow-soft hover:bg-ink/90 hover:scale-[1.02] transition-all"
-        >
-          Post a Job & View Candidate Pipelines →
-        </Link>
+        {user ? (
+          isEmployer ? (
+            <Link
+              to="/employer/dashboard"
+              className="inline-block bg-accent text-white px-7 py-3 rounded-xl text-xs font-bold shadow-soft hover:bg-accent/90 hover:scale-[1.02] transition-all"
+            >
+              Go to Employer Pipeline →
+            </Link>
+          ) : (
+            <Link
+              to="/jobs"
+              className="inline-block bg-accent text-white px-7 py-3 rounded-xl text-xs font-bold shadow-soft hover:bg-accent/90 hover:scale-[1.02] transition-all"
+            >
+              Browse Open Jobs →
+            </Link>
+          )
+        ) : (
+          <Link
+            to="/signup?role=employer"
+            className="inline-block bg-ink text-white px-7 py-3 rounded-xl text-xs font-bold shadow-soft hover:bg-ink/90 hover:scale-[1.02] transition-all"
+          >
+            Post a Job & View Candidate Pipelines →
+          </Link>
+        )}
       </div>
     </section>
   );

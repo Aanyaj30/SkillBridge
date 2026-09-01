@@ -110,14 +110,6 @@ const Navbar = () => {
                     </Link>
                   </>
                 )}
-
-                <button
-                  type="button"
-                  onClick={() => handleHashNav("#how-it-works")}
-                  className="text-inkSoft hover:text-ink transition-colors px-2 py-1"
-                >
-                  How it works
-                </button>
               </>
             ) : (
               <>

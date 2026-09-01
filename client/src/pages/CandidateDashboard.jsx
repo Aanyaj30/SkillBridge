@@ -568,7 +568,7 @@ const CandidateDashboard = () => {
                 </span>
                 <h3 className="text-lg font-bold text-ink mt-0.5">Resume Evidence Extraction (Eden AI)</h3>
                 <p className="text-xs text-inkSoft mt-1">
-                  Upload your PDF / DOCX resume. Eden AI extracts structured education, work experience, and verified technical skills without hallucination.
+                  Upload your PDF / DOCX resume. Eden AI extracts structured education, work experience, and evidence-grounded technical skills.
                 </p>
               </div>
 

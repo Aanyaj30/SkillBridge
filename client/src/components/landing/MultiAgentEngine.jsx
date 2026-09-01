@@ -4,43 +4,43 @@ const agents = [
   {
     number: "01",
     name: "Resume Evaluation Agent",
-    provider: "Eden AI Parser",
-    role: "Extracts structured education, experience, and certifications directly from PDF/DOCX resumes without hallucination.",
+    provider: "Eden AI Resume Parsing",
+    role: "Extracts structured candidate information from the uploaded resume through the resume parsing layer.",
     icon: "📄",
   },
   {
     number: "02",
     name: "Job Analysis Agent",
-    provider: "Skill Hierarchy Engine",
-    role: "Deconstructs employer job postings into normalized required, important, and optional core competencies.",
+    provider: "Job Requirements Layer",
+    role: "Analyzes job requirements and identifies relevant skills and requirements.",
     icon: "🎯",
   },
   {
     number: "03",
     name: "Candidate Evidence Agent",
-    provider: "Provenance Verifier",
-    role: "Tags every extracted skill with exact source quotes, strength levels, and repository project implementations.",
+    provider: "Evidence Provenance Verifier",
+    role: "Connects candidate skills to available evidence from resumes, projects, certifications and other submitted information.",
     icon: "🔍",
   },
   {
     number: "04",
-    name: "Career-Gap & Interview Agent",
-    provider: "Adaptive Multi-Lingual Q&A",
-    role: "Conducts conversational role-specific interviews in English, Hindi, and Hinglish to discover unlisted transferable skills.",
+    name: "Career-Gap / Adaptive Interview Agent",
+    provider: "Contextual Q&A",
+    role: "When additional evidence is needed, conducts job-relevant follow-up questions, with career-gap recovery as an important use case.",
     icon: "🤖",
   },
   {
     number: "05",
     name: "Explainable Matching Agent",
-    provider: "Deterministic Scoring Engine",
-    role: "Computes traditional ATS baseline vs SkillBridge match score with transparent mathematical provenance.",
+    provider: "Evidence Matching Engine",
+    role: "Calculates job-specific matching using the candidate evidence and required skills.",
     icon: "⚖️",
   },
   {
     number: "06",
     name: "Skill Guidance Agent",
-    provider: "Personalized Roadmap Engine",
-    role: "Provides step-by-step milestones, estimated hours, and ranked learning resources (#1, #2, #3) for genuine skill gaps.",
+    provider: "Personalized Guidance",
+    role: "Generates personalized guidance for genuine skill gaps.",
     icon: "🗺️",
   },
 ];
@@ -61,7 +61,7 @@ const MultiAgentEngine = () => {
           Six Specialized AI Agents Working in Harmony
         </h2>
         <p className="text-xs sm:text-sm text-inkSoft mt-2 max-w-2xl mx-auto">
-          Every evaluation is modular, explainable, and truthful. Designed to plug seamlessly into future enterprise AI infrastructure.
+          Every evaluation is modular, explainable, and grounded in submitted candidate evidence.
         </p>
       </div>
 

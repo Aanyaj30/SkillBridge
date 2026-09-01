@@ -4,19 +4,19 @@ import { useInView } from "../../hooks/useInView";
 const steps = [
   {
     label: "Ingest & Parse",
-    desc: "Eden AI parses structured resume data, education history, and certifications without fabricating unmentioned skills.",
+    desc: "SkillBridge converts submitted resumes and candidate information into structured evidence such as education, experience, skills, projects and certifications.",
   },
   {
     label: "Verify Evidence",
-    desc: "Candidate Evidence Agent tags skills with concrete evidence from practical projects, repositories, and past roles.",
+    desc: "Candidate skills are evaluated against available evidence instead of being assumed from unrelated keywords.",
   },
   {
     label: "Adaptive Interview",
-    desc: "Dynamic conversational interview targets undemonstrated job requirements in natural English, Hindi, or Hinglish.",
+    desc: "When evidence is insufficient for a job-relevant skill, SkillBridge can ask targeted follow-up questions to collect additional evidence.",
   },
   {
     label: "Match & Guide",
-    desc: "Deterministic matching provides transparent before/after scores, explainable evidence dossiers, and ranked learning roadmaps.",
+    desc: "Candidate evidence is compared with the requirements of the selected role, producing an explainable match and identifying genuine skill gaps.",
   },
 ];
 
@@ -25,13 +25,13 @@ const StepPreview = ({ index }) => {
     return (
       <div className="space-y-2 text-xs">
         <div className="flex items-center justify-between text-inkSoft">
-          <span>Eden AI OCR Parser</span>
-          <span className="text-accent font-semibold">100% Grounded</span>
+          <span>Eden AI Resume Parsing</span>
+          <span className="text-accent font-semibold">Structured Evidence</span>
         </div>
         <div className="bg-bg border border-border rounded-xl p-3 text-[11px] font-mono text-ink space-y-1">
           <p className="text-positive font-bold">✓ Education: B.Tech Computer Science</p>
           <p className="text-positive font-bold">✓ Skills: React, Node.js, REST APIs</p>
-          <p className="text-inkSoft">○ Docker: (Not present → Not extracted)</p>
+          <p className="text-inkSoft">○ Work Experience: 2 years (Logged & Analyzed)</p>
         </div>
       </div>
     );
@@ -51,7 +51,7 @@ const StepPreview = ({ index }) => {
           ))}
         </div>
         <p className="text-[11px] text-inkSoft pt-1">
-          Evidence: Verified in StoreSphere E-Commerce Project
+          Evidence Source: Linked to StoreSphere E-Commerce Code Repository
         </p>
       </div>
     );
@@ -69,17 +69,20 @@ const StepPreview = ({ index }) => {
     );
   }
   return (
-    <div className="space-y-2 text-xs">
-      <div className="flex justify-between text-inkSoft mb-1">
-        <span>Traditional ATS: <strong>30%</strong></span>
-        <span className="text-positive font-bold">SkillBridge: 88% (+58%)</span>
+    <div className="space-y-2.5 text-xs text-left">
+      <div className="flex items-center justify-between text-ink">
+        <span className="font-bold text-accent">Explainable Match Dossier</span>
+        <span className="text-[10px] font-bold bg-positiveLight text-positive border border-positive/20 px-2 py-0.5 rounded">
+          Evidence-Grounded
+        </span>
       </div>
-      <div className="h-2 bg-border rounded-full overflow-hidden">
-        <div className="h-full bg-gradient-to-r from-accent to-positive rounded-full" style={{ width: "88%" }} />
+      <div className="bg-bg border border-border rounded-xl p-3 text-[11px] space-y-1.5">
+        <p className="text-positive font-semibold">✓ Verified Skills: React, Node.js, REST APIs, State Management</p>
+        <p className="text-warning font-semibold">○ Skills to Strengthen: Automated Unit Testing</p>
+        <p className="text-inkSoft italic text-[10px]">
+          Action: Personalized 3-step learning roadmap & ranked resources generated.
+        </p>
       </div>
-      <p className="text-[11px] text-accent font-medium pt-1">
-        + Personalized Guide with 3 ranked learning milestones
-      </p>
     </div>
   );
 };
@@ -93,7 +96,7 @@ const HowItWorks = () => {
     if (!inView || !autoPlay) return;
     const interval = setInterval(() => {
       setActive((prev) => (prev + 1) % steps.length);
-    }, 3600);
+    }, 3800);
     return () => clearInterval(interval);
   }, [inView, autoPlay]);
 

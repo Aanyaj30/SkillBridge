@@ -1,25 +1,18 @@
 import axios from "axios";
 import FormData from "form-data";
-import { normalizeSkill, normalizeSkillList } from "../matching/skillNormalizer.js";
+import {
+  normalizeSkill,
+  normalizeSkillList,
+  extractExplicitSkillsFromResume,
+  isSkillExplicitlyPresent,
+  findSkillEvidence,
+} from "../matching/skillNormalizer.js";
 
 /**
  * Isolated Eden AI Resume Parser Service
  * Evaluates candidate resumes through Eden AI OCR Resume Parser API.
- * Never invents skills or evidence.
+ * Never invents skills or evidence — strictly validates against actual resume text.
  */
-
-// Common tech keywords to recognize in raw resume lines
-const KNOWN_TECH_KEYWORDS = [
-  "React", "React Native", "Next.js", "Vue.js", "Angular", "Svelte",
-  "Node.js", "Express", "REST APIs", "GraphQL", "FastAPI", "Django", "Flask", "Spring Boot",
-  "JavaScript", "TypeScript", "Python", "Java", "C++", "C#", "Go", "Rust", "PHP", "Ruby", "SQL",
-  "MongoDB", "PostgreSQL", "MySQL", "Redis", "SQLite", "DynamoDB", "Firebase", "Prisma ORM",
-  "HTML", "CSS", "Tailwind CSS", "Bootstrap", "Sass", "Redux", "State Management",
-  "Docker", "Kubernetes", "AWS", "Azure", "Google Cloud", "CI/CD", "Git", "GitHub", "Linux",
-  "Jest", "Cypress", "Testing", "Unit Testing",
-  "Project Planning", "Project Management", "Stakeholder Management", "Budget Management",
-  "Risk Management", "Team Coordination", "Team Leadership", "Agile / Scrum", "Communication", "Time Management"
-];
 
 /**
  * Rule-based Truthful Resume Parser Fallback
@@ -41,7 +34,7 @@ export const parseResumeLocally = (resumeText = "") => {
     };
   }
 
-  const lines = resumeText.split("\n").map((l) => l.trim()).filter(Boolean);
+  const lines = resumeText.split(/[\r\n]+/).map((l) => l.trim()).filter(Boolean);
 
   // 1. Extract contact info
   let name = "";
@@ -99,33 +92,8 @@ export const parseResumeLocally = (resumeText = "") => {
     }
   }
 
-  // 3. Extract Skills with Evidence
-  const extractedSkills = [];
-  const seenSkills = new Set();
-
-  for (const tech of KNOWN_TECH_KEYWORDS) {
-    // Regex word boundary search
-    const regex = new RegExp(`\\b${tech.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
-    
-    // Check line by line to capture the exact context line as evidence!
-    for (const line of lines) {
-      if (regex.test(line)) {
-        const canonical = normalizeSkill(tech);
-        const key = canonical.toLowerCase();
-        if (!seenSkills.has(key)) {
-          seenSkills.add(key);
-          extractedSkills.push({
-            skill: canonical,
-            evidence: line.length > 140 ? line.slice(0, 140) + "..." : line,
-            source: "resume",
-            strength: line.toLowerCase().includes("developed") || line.toLowerCase().includes("built") || line.toLowerCase().includes("implemented") ? "High" : "Medium",
-            confidence: 0.9,
-          });
-        }
-        break;
-      }
-    }
-  }
+  // 3. Extract Skills with Exact Textual Evidence
+  const extractedSkills = extractExplicitSkillsFromResume(resumeText);
 
   // 4. Parse Work History entries
   const workHistory = [];
@@ -170,10 +138,7 @@ export const parseResumeLocally = (resumeText = "") => {
         const title = parts[0].replace(/^[\d.•\-\* ]+/, "").trim();
         const desc = parts[1] ? parts[1].trim() : line;
         
-        // Find technologies mentioned in this project description
-        const projTech = KNOWN_TECH_KEYWORDS.filter((tk) =>
-          new RegExp(`\\b${tk}\\b`, "i").test(line)
-        );
+        const projTech = extractExplicitSkillsFromResume(line).map((s) => s.skill);
 
         currentProj = {
           title: title || "Practical Project",
@@ -183,9 +148,7 @@ export const parseResumeLocally = (resumeText = "") => {
         };
       } else if (currentProj) {
         currentProj.description += ` ${line}`;
-        const moreTech = KNOWN_TECH_KEYWORDS.filter((tk) =>
-          new RegExp(`\\b${tk}\\b`, "i").test(line)
-        );
+        const moreTech = extractExplicitSkillsFromResume(line).map((s) => s.skill);
         currentProj.technologies = Array.from(new Set([...currentProj.technologies, ...moreTech])).slice(0, 6);
       }
     }
@@ -208,9 +171,7 @@ export const parseResumeLocally = (resumeText = "") => {
   const certifications = [];
   for (const line of sections.certifications) {
     if (line.length > 4) {
-      const skillsInCert = KNOWN_TECH_KEYWORDS.filter((tk) =>
-        new RegExp(`\\b${tk}\\b`, "i").test(line)
-      );
+      const skillsInCert = extractExplicitSkillsFromResume(line).map((s) => s.skill);
       certifications.push({
         name: line.slice(0, 80),
         issuer: "Accredited Provider",
@@ -235,18 +196,21 @@ export const parseResumeLocally = (resumeText = "") => {
 /**
  * Main parseResumeWithEdenAI function
  * Calls Eden AI API with fallback to deterministic local structured parser.
+ * Any skills returned by Eden AI MUST be validated against the raw resume text.
  */
-export const parseResumeWithEdenAI = async (fileBuffer, mimetype = "text/plain", filename = "resume.txt") => {
+export const parseResumeWithEdenAI = async (
+  fileBuffer,
+  mimetype = "text/plain",
+  filename = "resume.txt",
+  rawText = ""
+) => {
   const apiKey = process.env.EDEN_AI_API_KEY;
+  const resumeText = rawText || fileBuffer.toString("utf8");
 
   if (!apiKey) {
     console.warn("[Resume Parser] EDEN_AI_API_KEY is not configured in .env. Using deterministic structured parser.");
-    const text = fileBuffer.toString("utf8");
-    return parseResumeLocally(text);
+    return parseResumeLocally(resumeText);
   }
-
-  // Check if buffer is valid
-  const resumeText = fileBuffer.toString("utf8");
 
   try {
     const form = new FormData();
@@ -280,20 +244,29 @@ export const parseResumeWithEdenAI = async (fileBuffer, mimetype = "text/plain",
       const phone = extracted.personal_infos?.phones?.[0] || "";
       const bio = extracted.personal_infos?.objective || extracted.personal_infos?.summary || "";
 
-      // Structured Skills
-      const skills = [];
+      // 1. Extract all verified skills directly from raw resume text
+      const validatedSkills = extractExplicitSkillsFromResume(resumeText);
+      const seenSkills = new Set(validatedSkills.map((s) => s.skill.toLowerCase()));
+
+      // 2. Validate any skills returned by Eden AI against raw resume text
+      // Never accept Eden AI skills that lack textual evidence!
       if (extracted.skills && Array.isArray(extracted.skills)) {
         extracted.skills.forEach((s) => {
           const rawName = typeof s === "string" ? s : s.name || s.skill || "";
-          if (rawName) {
+          if (rawName && isSkillExplicitlyPresent(rawName, resumeText)) {
             const canonical = normalizeSkill(rawName);
-            skills.push({
-              skill: canonical,
-              evidence: `Extracted from resume skill profile (${providerKey})`,
-              source: "resume",
-              strength: "Medium",
-              confidence: 0.9,
-            });
+            const key = canonical.toLowerCase();
+            if (!seenSkills.has(key)) {
+              seenSkills.add(key);
+              const ev = findSkillEvidence(rawName, resumeText);
+              validatedSkills.push({
+                skill: canonical,
+                evidence: ev?.evidence || "Extracted from resume text",
+                source: "resume",
+                strength: ev?.strength || "Medium",
+                confidence: ev?.confidence || 0.95,
+              });
+            }
           }
         });
       }
@@ -354,7 +327,7 @@ export const parseResumeWithEdenAI = async (fileBuffer, mimetype = "text/plain",
         email,
         phone,
         bio,
-        skills,
+        skills: validatedSkills,
         workHistory,
         education,
         projects,

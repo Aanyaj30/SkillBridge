@@ -5,51 +5,51 @@ const cohorts = [
   {
     id: "career-break",
     title: "1. Career-Break Returners",
-    tag: "Flagship Hero Story",
-    problem: "Resume timelines show employment gaps, causing conventional keyword ATS filters to automatically reject qualified candidates.",
-    solution: "SkillBridge discovers transferable skills, project work, and capabilities maintained or developed during the break through adaptive interviews.",
-    exampleBefore: "ATS Score: 30% (Filtered by 3-year timeline gap)",
-    exampleAfter: "SkillBridge Score: 88% (Verified Component Architecture & REST APIs)",
+    tag: "Flagship Hero Use Case",
+    problem: "Resume timelines show employment gaps, causing conventional keyword filters to overlook qualified candidates regardless of their capabilities.",
+    solution: "SkillBridge discovers transferable skills, project work, and capabilities maintained or developed during the break through project evidence and adaptive interviews.",
+    signalsConventional: "Filtered out by timeline gap and static keyword screening",
+    signalsSkillBridge: "Evaluated on verified projects, demonstrated skills, and contextual interview evidence",
     icon: "🌱",
   },
   {
     id: "freshers",
     title: "2. Freshers & Early Career",
-    tag: "Potential Over Titles",
-    problem: "Graduates possess high technical skills and hands-on portfolio projects, but lack 3-5 years of formal corporate employment history.",
+    tag: "Potential Over Job Titles",
+    problem: "Graduates possess high technical skills and hands-on portfolio implementations, but lack multi-year formal corporate employment titles.",
     solution: "We evaluate real project repositories, tech stack depth, and problem-solving execution rather than requiring years of title tenure.",
-    exampleBefore: "ATS Score: 25% (Zero formal company titles)",
-    exampleAfter: "SkillBridge Score: 85% (Verified Full-Stack MERN Project Execution)",
+    signalsConventional: "Overlooked due to zero formal company tenure on traditional resumes",
+    signalsSkillBridge: "Verified full-stack repository code, component architecture, and demonstrated core competencies",
     icon: "🎓",
   },
   {
     id: "tier23",
     title: "3. Tier-2 / Tier-3 College Students",
-    tag: "Fair Skill Assessment",
-    problem: "Prestige college filters overlook extraordinary engineers simply because their university name is not on traditional recruiter target lists.",
-    solution: "Objective, skill-first verification levels the playing field so demonstrated competence supersedes institutional pedigree.",
-    exampleBefore: "ATS Score: 40% (Non-target institutional filter)",
-    exampleAfter: "SkillBridge Score: 92% (High-confidence Algorithm & UI mastery)",
+    tag: "Capability Over Pedigree",
+    problem: "Institutional filters overlook extraordinary engineers simply because their university name is not on traditional recruiter target lists.",
+    solution: "Objective, skill-first verification focuses on practical code execution and demonstrated capability rather than institutional pedigree.",
+    signalsConventional: "Deprioritized by campus pedigree and recruiter target lists",
+    signalsSkillBridge: "Evaluated on demonstrated algorithm mastery, API design, and practical application development",
     icon: "🏛️",
   },
   {
     id: "experienced",
     title: "4. Experienced Candidates",
-    tag: "Holistic Depth",
-    problem: "Senior professionals have both formal experience and new modern frameworks that might not be highlighted in old titles.",
+    tag: "Modern Depth Beyond Titles",
+    problem: "Senior professionals have both formal experience and new modern frameworks that might not be captured in historical job titles.",
     solution: "Harmonizes verified historical career achievements with modern demonstrated capabilities and architecture depth.",
-    exampleBefore: "ATS Score: 70% (Traditional resume keyword match)",
-    exampleAfter: "SkillBridge Score: 94% (Full evidence depth & verified modern stack)",
+    signalsConventional: "Assumed to only possess skills mentioned in past static titles",
+    signalsSkillBridge: "Comprehensive evidence audit combining past experience with modern hands-on technical proficiencies",
     icon: "💼",
   },
   {
     id: "non-traditional",
     title: "5. Non-Traditional Candidates",
-    tag: "Transferable Skills",
+    tag: "Transferable Capabilities",
     problem: "Self-taught developers, bootcamp grads, or domain pivoters have non-linear backgrounds that traditional ATS tools misclassify.",
     solution: "Maps real-world deliverables, open source contributions, and problem-solving ability directly into required job proficiencies.",
-    exampleBefore: "ATS Score: 20% (Unrelated previous industry title)",
-    exampleAfter: "SkillBridge Score: 82% (Demonstrated practical API & DB implementation)",
+    signalsConventional: "Misclassified due to non-linear career paths and untraditional previous titles",
+    signalsSkillBridge: "Demonstrated practical API implementation, database architecture, and applied problem solving",
     icon: "🚀",
   },
 ];
@@ -73,7 +73,7 @@ const CandidateCohorts = () => {
           Solving Evidence-Poor Hiring Across Every Candidate Journey
         </h2>
         <p className="text-xs sm:text-sm text-inkSoft mt-2 max-w-2xl mx-auto">
-          SkillBridge is not just for one archetype. We uncover overlooked talent wherever traditional resume screening falls short.
+          SkillBridge is not just for one archetype. We help employers discover overlooked talent wherever conventional resume screening falls short.
         </p>
       </div>
 
@@ -114,26 +114,30 @@ const CandidateCohorts = () => {
               </span>
             </div>
           </div>
+
+          <span className="text-[10px] font-bold uppercase tracking-wider text-inkSoft bg-bg px-2.5 py-1 rounded border border-border">
+            Illustrative Example
+          </span>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-2 bg-red-50/60 border border-red-200/60 rounded-xl p-4">
             <p className="text-xs font-bold text-red-800 uppercase tracking-wider">
-              ❌ The Conventional ATS Trap
+              Traditional Resume Screening
             </p>
             <p className="text-xs text-ink leading-relaxed">{activeCohort.problem}</p>
             <div className="text-[11px] font-semibold text-red-700 pt-2 border-t border-red-200/40">
-              {activeCohort.exampleBefore}
+              Focus: {activeCohort.signalsConventional}
             </div>
           </div>
 
           <div className="space-y-2 bg-positiveLight/70 border border-positive/30 rounded-xl p-4">
             <p className="text-xs font-bold text-positive uppercase tracking-wider">
-              ✓ The SkillBridge Discovery
+              SkillBridge Evidence Evaluation
             </p>
             <p className="text-xs text-ink leading-relaxed">{activeCohort.solution}</p>
             <div className="text-[11px] font-semibold text-positive pt-2 border-t border-positive/30">
-              {activeCohort.exampleAfter}
+              Focus: {activeCohort.signalsSkillBridge}
             </div>
           </div>
         </div>
