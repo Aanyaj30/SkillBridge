@@ -6,9 +6,17 @@ const AuthContext = createContext(null);
 // who's logged in (candidate or employer) and to log in/out.
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem("user");
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const savedUser = localStorage.getItem("user");
+      const token = localStorage.getItem("token");
+      return savedUser && token ? JSON.parse(savedUser) : null;
+    } catch {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      return null;
+    }
   });
+  const authLoading = false;
 
   const login = (userData) => {
     // userData comes straight from the backend response: { _id, name/companyName, email, token, role }
@@ -24,7 +32,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, authLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

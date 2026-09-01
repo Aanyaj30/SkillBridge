@@ -7,6 +7,7 @@ import CandidateDashboard from "./pages/CandidateDashboard";
 import EmployerDashboard from "./pages/EmployerDashboard";
 import Jobs from "./pages/Jobs";
 import PostJob from "./pages/PostJob";
+import CandidatePipeline from "./pages/CandidatePipeline";
 
 function App() {
   return (
@@ -20,6 +21,10 @@ function App() {
           <Route path="/employer/dashboard" element={<EmployerDashboard />} />
           <Route path="/jobs" element={<Jobs />} />
           <Route path="/post-job" element={<PostJob />} />
+          <Route
+            path="/employer/job/:jobId/pipeline"
+            element={<CandidatePipeline />}
+          />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

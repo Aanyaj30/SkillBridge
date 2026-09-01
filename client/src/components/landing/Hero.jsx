@@ -7,52 +7,77 @@ const Hero = () => {
   return (
     <section
       ref={ref}
-      className="max-w-4xl mx-auto px-6 pt-24 pb-12 text-center"
+      className="max-w-5xl mx-auto px-6 pt-20 pb-14 text-center relative"
       style={{
         opacity: inView ? 1 : 0,
         transform: inView ? "translateY(0)" : "translateY(16px)",
         transition: "opacity 0.6s ease, transform 0.6s ease",
       }}
     >
-      <p className="text-xs font-semibold tracking-[0.14em] text-accent uppercase mb-5">
-        Rethinking the career gap
-      </p>
+      {/* Category Pill */}
+      <div className="inline-flex items-center gap-2 bg-accentLight border border-accent/20 px-3.5 py-1.5 rounded-full text-xs font-bold text-accent mb-6 shadow-xs">
+        <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+        AI-Powered Skill-First Hiring Platform
+      </div>
 
-      <h1 className="text-4xl md:text-6xl font-semibold text-ink tracking-tight leading-[1.08]">
-        Your career gap is
+      {/* Primary Tagline */}
+      <h1 className="text-4xl sm:text-6xl font-bold text-ink tracking-tight leading-[1.12]">
+        The Gap Changed.
         <br />
-        not a skills gap.
+        <span className="bg-gradient-to-r from-accent via-emerald-600 to-teal-700 bg-clip-text text-transparent">
+          The Talent Didn't.
+        </span>
       </h1>
 
-      <p className="mt-6 text-lg text-inkSoft max-w-xl mx-auto leading-relaxed">
-        SkillBridge helps candidates turn real-life experience into recognized
-        professional skills — and helps employers see capability that
-        traditional hiring tools filter out.
+      {/* Core Positioning Statement */}
+      <p className="mt-6 text-base sm:text-lg text-inkSoft max-w-2xl mx-auto leading-relaxed font-normal">
+        SkillBridge helps employers discover candidates based on <strong>demonstrated skills and practical potential</strong> — not just traditional resume keyword history.
       </p>
 
-      <div className="mt-10 flex items-center justify-center gap-4">
+      {/* Primary CTA Buttons */}
+      <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
         <Link
           to="/signup?role=candidate"
-          className="group bg-accent text-white px-6 py-3.5 rounded-md text-sm font-medium
-                     shadow-soft hover:shadow-hover hover:-translate-y-0.5
+          className="group bg-accent text-white px-7 py-3.5 rounded-xl text-xs font-bold
+                     shadow-soft hover:bg-accent/90 hover:-translate-y-0.5 hover:shadow-card
                      transition-all duration-200 flex items-center gap-2"
         >
-          I'm a candidate
+          I'm a Candidate
           <span className="transition-transform duration-200 group-hover:translate-x-1">
             →
           </span>
         </Link>
         <Link
           to="/signup?role=employer"
-          className="group bg-white text-ink border border-border px-6 py-3.5 rounded-md text-sm font-medium
+          className="group bg-white text-ink border border-border px-7 py-3.5 rounded-xl text-xs font-bold
                      hover:border-accent/40 hover:-translate-y-0.5 hover:shadow-soft
                      transition-all duration-200 flex items-center gap-2"
         >
-          I'm hiring
+          I'm Hiring
           <span className="transition-transform duration-200 group-hover:translate-x-1">
             →
           </span>
         </Link>
+      </div>
+
+      {/* Micro Metrics Strip */}
+      <div className="mt-14 pt-10 border-t border-border/80 grid grid-cols-2 md:grid-cols-4 gap-6 text-left max-w-4xl mx-auto">
+        <div className="space-y-1">
+          <p className="text-2xl font-bold text-ink">100%</p>
+          <p className="text-xs text-inkSoft">Evidence-Grounded (Zero Fabrication)</p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-2xl font-bold text-accent">5 Cohorts</p>
+          <p className="text-xs text-inkSoft">Inclusive Workforce Architecture</p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-2xl font-bold text-positive">Dynamic</p>
+          <p className="text-xs text-inkSoft">Adaptive Hinglish & English Q&A</p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-2xl font-bold text-ink">Explainable</p>
+          <p className="text-xs text-inkSoft">Transparent Before vs After Match</p>
+        </div>
       </div>
     </section>
   );

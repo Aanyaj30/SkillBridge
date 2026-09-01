@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
 
-// This is the "join" model — it connects one candidate to one job,
-// and stores the match results for that specific pairing.
 const applicationSchema = new mongoose.Schema(
   {
     candidate: {
@@ -9,16 +7,78 @@ const applicationSchema = new mongoose.Schema(
       ref: "Candidate",
       required: true,
     },
-    job: { type: mongoose.Schema.Types.ObjectId, ref: "Job", required: true },
+    job: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Job",
+      required: true,
+    },
 
-    // What a traditional/old system would have scored — this powers your "before" in the before/after reveal
+    // Traditional ATS Score (Baseline: titles & resume keywords only)
     baselineMatchScore: { type: Number, default: 0 },
 
-    // The real SkillBridge score, after skill continuity analysis — this is the "after"
+    // SkillBridge Score (After verified multi-source skill demonstration)
     matchScore: { type: Number, default: 0 },
+
+    // Improvement difference (+X%)
+    improvement: { type: Number, default: 0 },
 
     matchedSkills: [{ type: String }],
     skillsNeedingRefresh: [{ type: String }],
+
+    // Detailed evidence supporting matched skills
+    skillEvidence: [
+      {
+        skill: String,
+        evidence: String,
+        source: String,
+        confidence: Number,
+        strength: String,
+      },
+    ],
+
+    // Overlooked flag & explainability
+    potentiallyOverlooked: { type: Boolean, default: false },
+    explanation: { type: String, default: "" },
+    strengths: [{ type: String }],
+
+    // Dynamic interview answers for this job application
+    interviewAnswers: [
+      {
+        question: String,
+        answer: String,
+        targetSkill: String,
+        analysis: String,
+      },
+    ],
+
+    // Cached personalized guide for this job application
+    personalizedGuide: {
+      allSkillsDemonstrated: Boolean,
+      skillsToImprove: [
+        {
+          skill: String,
+          whyItMatters: String,
+          currentStatus: String,
+          roadmap: [String],
+          resources: [
+            {
+              rank: Number,
+              name: String,
+              url: String,
+              reason: String,
+            },
+          ],
+          certifications: [
+            {
+              name: String,
+              provider: String,
+              reason: String,
+            },
+          ],
+        },
+      ],
+      overallAdvice: String,
+    },
 
     status: {
       type: String,
@@ -26,7 +86,7 @@ const applicationSchema = new mongoose.Schema(
       default: "applied",
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 export default mongoose.model("Application", applicationSchema);

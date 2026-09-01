@@ -2,9 +2,9 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Candidate from "../models/Candidate.js";
 import Employer from "../models/Employer.js";
+import Job from "../models/Job.js";
+import Application from "../models/Application.js";
 
-// Small helper — creates a signed token containing the user's id and role.
-// The frontend will send this token back on every request so we know who's asking.
 const generateToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: "7d" });
 };
@@ -22,7 +22,6 @@ export const registerCandidate = async (req, res) => {
         .json({ message: "An account with this email already exists" });
     }
 
-    // Hash the password before saving — we NEVER store plain text passwords
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -121,6 +120,29 @@ export const loginEmployer = async (req, res) => {
       email: employer.email,
       token: generateToken(employer._id, "employer"),
     });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// DELETE /api/auth/profile — Deletes current candidate or employer account and all associated data
+export const deleteUserAccount = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const isCandidate = Boolean(req.user.name);
+
+    if (isCandidate) {
+      await Application.deleteMany({ candidate: userId });
+      await Candidate.findByIdAndDelete(userId);
+    } else {
+      const employerJobs = await Job.find({ employer: userId });
+      const jobIds = employerJobs.map((j) => j._id);
+      await Application.deleteMany({ job: { $in: jobIds } });
+      await Job.deleteMany({ employer: userId });
+      await Employer.findByIdAndDelete(userId);
+    }
+
+    res.json({ message: "Account and all associated records permanently deleted." });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
