@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@sap-ai-sdk/orchestration": "^2.15.0",
+    "dotenv": "^17.4.2"
+  }
+}
