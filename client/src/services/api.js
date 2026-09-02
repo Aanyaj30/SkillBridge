@@ -5,7 +5,7 @@ import axios from "axios";
 // backend URL later (e.g. when you deploy), and to auto-attach the
 // login token to every request.
 const api = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
 });
 
 // Runs before every request — if we have a saved token, attach it.
