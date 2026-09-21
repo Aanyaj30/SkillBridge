@@ -31,13 +31,14 @@ const calculateTotalExperienceMonths = (workHistory = []) => {
  * - Direct resume keyword presence (25%)
  */
 export const computeTraditionalATSScore = (candidate, job) => {
-  let score = 0;
   const jobTitle = (job.title || "").toLowerCase();
   const rawResume = (candidate.resumeText || "").toLowerCase();
   const workHistory = candidate.workHistory || [];
 
   // 1. Role Title Alignment (0 to 30 points)
+  let titleScore = 0;
   let titleMatch = false;
+  let matchedPastTitle = "";
   for (const wh of workHistory) {
     const pastTitle = (wh.title || "").toLowerCase();
     if (
@@ -49,25 +50,27 @@ export const computeTraditionalATSScore = (candidate, job) => {
       (pastTitle && jobTitle.includes(pastTitle))
     ) {
       titleMatch = true;
+      matchedPastTitle = wh.title;
       break;
     }
   }
   if (titleMatch) {
-    score += 30;
+    titleScore = 30;
   } else if (workHistory.length > 0) {
-    score += 10; // partial for having any work history
+    titleScore = 10; // partial for having any work history
   }
 
   // 2. Experience Duration & Career Continuity (0 to 25 points)
   const expMonths = calculateTotalExperienceMonths(workHistory);
+  let expScore = 0;
   if (expMonths >= 36 && !candidate.hasCareerGap) {
-    score += 25;
+    expScore = 25;
   } else if (expMonths >= 24) {
-    score += candidate.hasCareerGap ? 12 : 20;
+    expScore = candidate.hasCareerGap ? 12 : 20;
   } else if (expMonths >= 6) {
-    score += candidate.hasCareerGap ? 8 : 15;
+    expScore = candidate.hasCareerGap ? 8 : 15;
   } else if (expMonths > 0) {
-    score += 5;
+    expScore = 5;
   }
 
   // 3. Education Factor (0 to 20 points)
@@ -81,29 +84,78 @@ export const computeTraditionalATSScore = (candidate, job) => {
     rawResume.includes("master") ||
     education.length > 0;
 
+  let eduScore = 0;
   if (hasCSDegree) {
-    score += 20;
+    eduScore = 20;
   } else if (rawResume.includes("degree") || rawResume.includes("diploma")) {
-    score += 10;
+    eduScore = 10;
   }
 
   // 4. Direct Resume Keyword Match (0 to 25 points)
   const requiredSkills = normalizeSkillList(job.requiredSkills || []);
+  let keywordScore = 0;
+  const matchedKeywords = [];
+  const missingKeywords = [];
+
   if (requiredSkills.length > 0) {
-    let resumeKeywordHits = 0;
     requiredSkills.forEach((reqSkill) => {
       const lower = reqSkill.toLowerCase();
       if (rawResume.includes(lower)) {
-        resumeKeywordHits += 1;
+        matchedKeywords.push(reqSkill);
+      } else {
+        missingKeywords.push(reqSkill);
       }
     });
-    const keywordRatio = resumeKeywordHits / requiredSkills.length;
-    score += Math.round(keywordRatio * 25);
+    const keywordRatio = matchedKeywords.length / requiredSkills.length;
+    keywordScore = Math.round(keywordRatio * 25);
   } else {
-    score += 15;
+    keywordScore = 15;
   }
 
-  return Math.min(100, Math.max(0, Math.round(score)));
+  const totalScore = Math.min(100, Math.max(0, titleScore + expScore + eduScore + keywordScore));
+
+  const breakdown = {
+    roleTitle: {
+      score: titleScore,
+      max: 30,
+      matched: titleMatch,
+      detail: titleMatch
+        ? `Matched past role (${matchedPastTitle}) with target title`
+        : workHistory.length > 0
+        ? "Partial credit for general work history"
+        : "No title or history match",
+    },
+    experience: {
+      score: expScore,
+      max: 25,
+      months: expMonths,
+      hasGap: Boolean(candidate.hasCareerGap),
+      detail: `${Math.round((expMonths / 12) * 10) / 10} yrs total experience${
+        candidate.hasCareerGap ? " (career break flagged by ATS)" : ""
+      }`,
+    },
+    education: {
+      score: eduScore,
+      max: 20,
+      hasDegree: Boolean(hasCSDegree),
+      detail: hasCSDegree
+        ? "Technical/CS degree or coursework detected"
+        : eduScore === 10
+        ? "General degree/diploma detected"
+        : "No formal degree detected in resume",
+    },
+    keywords: {
+      score: keywordScore,
+      max: 25,
+      matchedCount: matchedKeywords.length,
+      totalCount: requiredSkills.length,
+      matchedKeywords,
+      missingKeywords,
+      detail: `${matchedKeywords.length} of ${requiredSkills.length} exact resume keywords found`,
+    },
+  };
+
+  return { totalScore, score: totalScore, breakdown };
 };
 
 /**
@@ -185,31 +237,65 @@ export const computeMatch = (candidate, job, interviewAnswers = []) => {
   });
 
   // 2. SkillBridge Score Calculation
-  let skillMatchScore = 0;
+  let coverageRatio = 1;
+  let skillCoverageScore = 80;
   if (requiredSkills.length > 0) {
-    const coverageRatio = matchedSkills.length / requiredSkills.length;
-    skillMatchScore += coverageRatio * 80; // 80 points max for required skills coverage
-  } else {
-    skillMatchScore += 80;
+    coverageRatio = matchedSkills.length / requiredSkills.length;
+    skillCoverageScore = Math.round(coverageRatio * 80);
   }
 
   // Practical Project Depth Bonus (up to 12 points)
+  let projectBonus = 0;
   if (candidateProjects.length >= 2) {
-    skillMatchScore += 12;
+    projectBonus = 12;
   } else if (candidateProjects.length === 1) {
-    skillMatchScore += 8;
+    projectBonus = 8;
   }
 
   // Interview Demonstration Bonus (up to 8 points)
+  let interviewBonus = 0;
   if (interviewAnswers && interviewAnswers.length > 0) {
-    skillMatchScore += 8;
+    interviewBonus = 8;
   }
 
   // Cap at 100
-  const finalMatchScore = Math.min(100, Math.max(0, Math.round(skillMatchScore)));
+  const finalMatchScore = Math.min(100, Math.max(0, skillCoverageScore + projectBonus + interviewBonus));
+
+  const matchBreakdown = {
+    skillCoverage: {
+      score: skillCoverageScore,
+      max: 80,
+      matchedCount: matchedSkills.length,
+      totalCount: requiredSkills.length,
+      detail: `${matchedSkills.length} of ${requiredSkills.length} required skills verified through demonstrated evidence`,
+    },
+    projectBonus: {
+      score: projectBonus,
+      max: 12,
+      projectCount: candidateProjects.length,
+      detail:
+        candidateProjects.length >= 2
+          ? `+12% portfolio depth bonus for ${candidateProjects.length} practical projects`
+          : candidateProjects.length === 1
+          ? `+8% portfolio depth bonus for 1 practical project`
+          : "0% (no practical projects logged)",
+    },
+    interviewBonus: {
+      score: interviewBonus,
+      max: 8,
+      interviewCompleted: Boolean(interviewAnswers && interviewAnswers.length > 0),
+      detail:
+        interviewAnswers && interviewAnswers.length > 0
+          ? `+8% adaptive interview demonstration bonus`
+          : "0% (interview not taken for this application)",
+    },
+  };
 
   // 3. Traditional ATS Score
-  const baselineMatchScore = computeTraditionalATSScore(candidate, job);
+  const baselineResult = computeTraditionalATSScore(candidate, job);
+  const baselineMatchScore =
+    typeof baselineResult === "number" ? baselineResult : baselineResult.totalScore;
+  const baselineBreakdown = baselineResult.breakdown || {};
 
   // 4. Improvement & Overlooked Flag
   const improvement = Math.max(0, finalMatchScore - baselineMatchScore);
@@ -219,7 +305,9 @@ export const computeMatch = (candidate, job, interviewAnswers = []) => {
 
   return {
     baselineMatchScore,
+    baselineBreakdown,
     matchScore: finalMatchScore,
+    matchBreakdown,
     improvement,
     matchedSkills,
     skillsNeedingRefresh,

@@ -15,9 +15,11 @@ const applicationSchema = new mongoose.Schema(
 
     // Traditional ATS Score (Baseline: titles & resume keywords only)
     baselineMatchScore: { type: Number, default: 0 },
+    baselineBreakdown: { type: mongoose.Schema.Types.Mixed, default: {} },
 
     // SkillBridge Score (After verified multi-source skill demonstration)
     matchScore: { type: Number, default: 0 },
+    matchBreakdown: { type: mongoose.Schema.Types.Mixed, default: {} },
 
     // Improvement difference (+X%)
     improvement: { type: Number, default: 0 },
@@ -52,33 +54,7 @@ const applicationSchema = new mongoose.Schema(
     ],
 
     // Cached personalized guide for this job application
-    personalizedGuide: {
-      allSkillsDemonstrated: Boolean,
-      skillsToImprove: [
-        {
-          skill: String,
-          whyItMatters: String,
-          currentStatus: String,
-          roadmap: [String],
-          resources: [
-            {
-              rank: Number,
-              name: String,
-              url: String,
-              reason: String,
-            },
-          ],
-          certifications: [
-            {
-              name: String,
-              provider: String,
-              reason: String,
-            },
-          ],
-        },
-      ],
-      overallAdvice: String,
-    },
+    personalizedGuide: { type: mongoose.Schema.Types.Mixed, default: null },
 
     status: {
       type: String,

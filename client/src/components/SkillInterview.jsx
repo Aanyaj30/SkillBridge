@@ -20,34 +20,26 @@ const SkillInterview = ({ jobId, onComplete, onCancel }) => {
     scrollToBottom();
   }, [history, session, evaluating]);
 
-  // Start dynamic interview on mount
-  useEffect(() => {
-    let isMounted = true;
-    const startInterview = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const { data } = await api.post("/candidate/interview/start", { jobId });
-        if (isMounted) {
-          setSession(data);
-        }
-      } catch (err) {
-        if (isMounted) {
-          setError(
-            err.response?.data?.message ||
-              err.message ||
-              "Could not start the AI skill interview."
-          );
-        }
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
+  // Start dynamic interview on mount or retry
+  const startInterview = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const { data } = await api.post("/candidate/interview/start", { jobId });
+      setSession(data);
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "AI interviewer is temporarily unavailable. Please retry."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     startInterview();
-    return () => {
-      isMounted = false;
-    };
   }, [jobId]);
 
   const handleSendAnswer = async (e) => {
@@ -149,6 +141,34 @@ const SkillInterview = ({ jobId, onComplete, onCancel }) => {
         <p className="text-xs text-inkSoft mt-1">
           Analyzing job requirements and candidate context
         </p>
+      </div>
+    );
+  }
+
+  if (error && !session) {
+    return (
+      <div className="bg-white border border-border rounded-xl p-8 text-center max-w-xl mx-auto shadow-card">
+        <div className="w-10 h-10 rounded-full bg-warningLight text-warning flex items-center justify-center mx-auto text-lg mb-3">
+          ⚠️
+        </div>
+        <p className="text-sm font-bold text-ink mb-1">AI Interviewer Unavailable</p>
+        <p className="text-xs text-inkSoft mb-4 max-w-md mx-auto">{error}</p>
+        <div className="flex justify-center gap-3">
+          {onCancel && (
+            <button
+              onClick={onCancel}
+              className="text-xs text-inkSoft hover:text-ink px-4 py-2 border border-border rounded-lg"
+            >
+              Cancel
+            </button>
+          )}
+          <button
+            onClick={() => startInterview()}
+            className="text-xs font-semibold bg-accent text-white px-4 py-2 rounded-lg shadow-soft hover:bg-accent/90 flex items-center gap-1.5"
+          >
+            <span>Retry AI Assessment ↻</span>
+          </button>
+        </div>
       </div>
     );
   }
@@ -333,7 +353,19 @@ const SkillInterview = ({ jobId, onComplete, onCancel }) => {
         </form>
       )}
 
-      {error && <p className="text-xs text-warning mt-3 bg-warningLight/50 p-2.5 rounded-lg">{error}</p>}
+      {error && (
+        <div className="mt-3 bg-warningLight/60 border border-warning/30 p-3 rounded-xl flex items-center justify-between gap-2 text-xs text-warning animate-fadeIn">
+          <span>{error}</span>
+          <button
+            type="button"
+            onClick={handleSendAnswer}
+            disabled={evaluating || !currentAnswer.trim()}
+            className="shrink-0 bg-white text-ink border border-border px-2.5 py-1 rounded-lg font-semibold hover:bg-bg transition-colors cursor-pointer"
+          >
+            Retry ↻
+          </button>
+        </div>
+      )}
     </div>
   );
 };
